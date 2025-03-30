@@ -17,7 +17,7 @@ const PokédexLandingPage = () => {
           <p className="text-xl text-center mb-6">Tu guía definitiva al mundo Pokémon</p>
           <div className="w-full max-w-md bg-black bg-opacity-30 p-4 rounded-lg mb-8">
             <p className="text-center italic">
-              "Para convertirte en un Maestro Pokémon, primero debes conocer a todos los Pokémon. Nuestra Pokédex te ayudará en tu viaje."
+              &ldquo;Para convertirte en un Maestro Pokémon, primero debes conocer a todos los Pokémon. Nuestra Pokédex te ayudará en tu viaje.&rdquo;
             </p>
           </div>
         </div>
