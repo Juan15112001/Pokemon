@@ -378,6 +378,11 @@ const PokemonGrid = () => {
     setShowFilters(false);
   };
   
+  // Load data when component mounts
+  useEffect(() => {
+    fetchPokemon();
+  }, []);
+  
   // Calcular Pokémon para la página actual
   const getCurrentPagePokemon = (list = filteredPokemon) => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
