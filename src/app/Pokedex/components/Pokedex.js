@@ -15,6 +15,8 @@ const PokemonGrid = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [shinyStates, setShinyStates] = useState({});
   const [expandedStates, setExpandedStates] = useState({});
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalPokemon, setTotalPokemon] = useState(0);
   
   // New filter states
   const [showFilters, setShowFilters] = useState(false);
@@ -60,18 +62,68 @@ const PokemonGrid = () => {
     shadow: 'bg-gray-700'
   };
   
+  // Function to load more Pokémon in batches
+  const loadMorePokemon = async (offset) => {
+    try {
+      setLoadingMore(true);
+      const BATCH_SIZE = 200;
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${BATCH_SIZE}&offset=${offset}`);
+      const data = await response.json();
+      
+      const newPokemon = data.results.map(pokemon => {
+        const urlParts = pokemon.url.split('/');
+        const id = urlParts[urlParts.length - 2];
+        return {
+          ...pokemon,
+          id,
+          image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+          shinyImage: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`,
+          region: 'Loading...',
+          types: []
+        };
+      });
+
+      // Update shiny states for new Pokémon
+      const newShinyStates = { ...shinyStates };
+      const newExpandedStates = { ...expandedStates };
+      newPokemon.forEach(p => {
+        newShinyStates[p.id] = false;
+        newExpandedStates[p.id] = false;
+      });
+      setShinyStates(newShinyStates);
+      setExpandedStates(newExpandedStates);
+
+      // Update Pokémon list
+      setPokemon(prev => [...prev, ...newPokemon]);
+      setFilteredPokemon(prev => [...prev, ...newPokemon]);
+
+      // Load additional info for new Pokémon
+      await loadAdditionalInfo(newPokemon);
+      
+    } catch (error) {
+      console.error('Error loading more Pokémon:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+  
   // Function to fetch Pokémon data from the API
   const fetchPokemon = async () => {
     try {
       setLoading(true);
-      const INITIAL_LOAD_COUNT = 200; // Cargar solo los primeros 200 Pokémon inicialmente
+      const INITIAL_LOAD_COUNT = 200;
       
-      // Get all basic Pokémon (names and URLs only) - limit to initial count
+      // Get total count first
+      const countResponse = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1');
+      const countData = await countResponse.json();
+      setTotalPokemon(countData.count);
+      
+      // Get initial batch of Pokémon
       const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${INITIAL_LOAD_COUNT}`);
       const data = await response.json();
       
       // Calculate total number of pages
-      setTotalPages(Math.ceil(data.results.length / ITEMS_PER_PAGE));
+      setTotalPages(Math.ceil(countData.count / ITEMS_PER_PAGE));
       
       // Add IDs to each Pokémon based on their URL
       const pokemonWithIds = data.results.map(pokemon => {
@@ -100,10 +152,17 @@ const PokemonGrid = () => {
       setShinyStates(initialShinyStates);
       setExpandedStates(initialExpandedStates);
       
-      // Load additional information for each Pokémon
+      // Load additional information for initial batch
       await loadAdditionalInfo(pokemonWithIds);
       
       setLoading(false);
+
+      // Start loading the rest of the Pokémon in batches
+      const remainingBatches = Math.ceil((countData.count - INITIAL_LOAD_COUNT) / 200);
+      for (let i = 1; i <= remainingBatches; i++) {
+        const offset = INITIAL_LOAD_COUNT + (i - 1) * 200;
+        await loadMorePokemon(offset);
+      }
       
     } catch (error) {
       console.error('Error fetching Pokémon data:', error);
@@ -318,54 +377,6 @@ const PokemonGrid = () => {
     setSelectedRegions([]);
     setShowFilters(false);
   };
-  
-  // Load data when component mounts
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const INITIAL_LOAD_COUNT = 200; // Cargar solo los primeros 200 Pokémon inicialmente
-        
-        // Get all basic Pokémon (names and URLs only) - limit to initial count
-        const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${INITIAL_LOAD_COUNT}`);
-        const data = await response.json();
-        
-        // Calculate total number of pages
-        setTotalPages(Math.ceil(data.results.length / ITEMS_PER_PAGE));
-        
-        // Add IDs to each Pokémon based on their URL
-        const pokemonWithIds = data.results.map(pokemon => {
-          const urlParts = pokemon.url.split('/');
-          const id = urlParts[urlParts.length - 2];
-          return {
-            ...pokemon,
-            id,
-            image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
-            shinyImage: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`,
-            region: 'Loading...',
-            types: []
-          };
-        });
-        
-        setPokemon(pokemonWithIds);
-        setFilteredPokemon(pokemonWithIds);
-        
-        // Load region information for each Pokémon
-        await loadRegionInfo(pokemonWithIds);
-        
-        // Load types for all Pokémon
-        await loadAllPokemonTypes(pokemonWithIds);
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching Pokémon data:', error);
-        setError('Error loading Pokémon data. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
   
   // Calcular Pokémon para la página actual
   const getCurrentPagePokemon = (list = filteredPokemon) => {
@@ -679,6 +690,14 @@ const PokemonGrid = () => {
               </button>
             </div>
           </>
+        )}
+        
+        {/* Loading indicator for additional Pokémon */}
+        {loadingMore && (
+          <div className="fixed bottom-4 right-4 bg-white/10 backdrop-blur-sm p-4 rounded-lg text-white flex items-center gap-2">
+            <Loader className="animate-spin" size={20} />
+            <span>Loading more Pokémon...</span>
+          </div>
         )}
       </div>
     </div>
