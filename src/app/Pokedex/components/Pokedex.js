@@ -83,6 +83,9 @@ const PokemonGrid = () => {
         };
       });
 
+      // Sort new Pokémon by ID
+      newPokemon.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+
       // Update shiny states for new Pokémon
       const newShinyStates = { ...shinyStates };
       const newExpandedStates = { ...expandedStates };
@@ -93,9 +96,15 @@ const PokemonGrid = () => {
       setShinyStates(newShinyStates);
       setExpandedStates(newExpandedStates);
 
-      // Update Pokémon list
-      setPokemon(prev => [...prev, ...newPokemon]);
-      setFilteredPokemon(prev => [...prev, ...newPokemon]);
+      // Update Pokémon list and maintain order
+      setPokemon(prev => {
+        const combined = [...prev, ...newPokemon];
+        return combined.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      });
+      setFilteredPokemon(prev => {
+        const combined = [...prev, ...newPokemon];
+        return combined.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      });
 
       // Load additional info for new Pokémon
       await loadAdditionalInfo(newPokemon);
@@ -138,6 +147,9 @@ const PokemonGrid = () => {
           types: []
         };
       });
+
+      // Sort initial batch by ID
+      pokemonWithIds.sort((a, b) => parseInt(a.id) - parseInt(b.id));
       
       setPokemon(pokemonWithIds);
       setFilteredPokemon(pokemonWithIds);
