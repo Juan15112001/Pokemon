@@ -14,46 +14,68 @@ const PokemonDetails = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState(null);
 
+  const typeColors = {
+    normal: 'bg-gray-400',
+    fire: 'bg-red-500',
+    water: 'bg-blue-500',
+    electric: 'bg-yellow-400',
+    grass: 'bg-green-500',
+    ice: 'bg-blue-200',
+    fighting: 'bg-red-700',
+    poison: 'bg-purple-500',
+    ground: 'bg-yellow-600',
+    flying: 'bg-blue-300',
+    psychic: 'bg-pink-500',
+    bug: 'bg-green-400',
+    rock: 'bg-yellow-700',
+    ghost: 'bg-purple-700',
+    dragon: 'bg-indigo-600',
+    dark: 'bg-gray-800',
+    steel: 'bg-gray-500',
+    fairy: 'bg-pink-300'
+  };
+
   useEffect(() => {
     const fetchPokemonDetails = async () => {
       try {
         setLoading(true);
-        // Obtener información básica del Pokémon
+        // Get basic Pokémon information
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
         const data = await response.json();
 
-        // Obtener información de especie para evoluciones y descripción
+        // Get species information for evolutions and description
         const speciesResponse = await fetch(data.species.url);
         const speciesData = await speciesResponse.json();
 
-        // Obtener información de cadena de evolución
+        // Get evolution chain information
         const evolutionResponse = await fetch(speciesData.evolution_chain.url);
         const evolutionData = await evolutionResponse.json();
 
-        // Obtener información de movimientos
+        // Get moves information
         const movesPromises = data.moves.map(move => 
           fetch(move.move.url).then(res => res.json())
         );
         const movesData = await Promise.all(movesPromises);
 
-        // Obtener información de habilidades
+        // Get abilities information
         const abilitiesPromises = data.abilities.map(ability => 
           fetch(ability.ability.url).then(res => res.json())
         );
         const abilitiesData = await Promise.all(abilitiesPromises);
 
-        // Obtener información de tipos
+        // Get types information
         const typesPromises = data.types.map(type => 
           fetch(type.type.url).then(res => res.json())
         );
         const typesData = await Promise.all(typesPromises);
 
-        // Procesar la cadena de evolución
+        // Process evolution chain
         const processEvolutionChain = (chain) => {
           const evolutions = [];
-          let current = chain;
           
-          while (current) {
+          const processEvolutions = (current) => {
+            if (!current) return;
+            
             evolutions.push({
               name: current.species.name,
               id: current.species.url.split('/').slice(-2, -1)[0],
@@ -74,9 +96,16 @@ const PokemonDetails = () => {
               relative_physical_stats: current.evolution_details[0]?.relative_physical_stats || null,
               turn_upside_down: current.evolution_details[0]?.turn_upside_down || false,
             });
-            current = current.evolves_to[0];
-          }
-          
+
+            // Process all possible evolutions at this stage
+            if (current.evolves_to && current.evolves_to.length > 0) {
+              current.evolves_to.forEach(evo => {
+                processEvolutions(evo);
+              });
+            }
+          };
+
+          processEvolutions(chain);
           return evolutions;
         };
 
@@ -96,8 +125,8 @@ const PokemonDetails = () => {
             name: ability.ability.name,
             is_hidden: ability.is_hidden,
             slot: ability.slot,
-            effect: abilitiesData[index]?.effect_entries.find(e => e.language.name === 'es')?.effect || 'No hay descripción disponible',
-            short_effect: abilitiesData[index]?.effect_entries.find(e => e.language.name === 'es')?.short_effect || 'No hay descripción disponible',
+            effect: abilitiesData[index]?.effect_entries.find(e => e.language.name === 'en')?.effect || 'No description available',
+            short_effect: abilitiesData[index]?.effect_entries.find(e => e.language.name === 'en')?.short_effect || 'No description available',
           })),
           moves: movesData.map(move => ({
             name: move.name,
@@ -108,13 +137,13 @@ const PokemonDetails = () => {
             priority: move.priority,
             damage_class: move.damage_class.name,
             effect_chance: move.effect_chance,
-            effect_entries: move.effect_entries.find(e => e.language.name === 'es')?.effect || 'No hay descripción disponible',
-            short_effect: move.effect_entries.find(e => e.language.name === 'es')?.short_effect || 'No hay descripción disponible',
+            effect_entries: move.effect_entries.find(e => e.language.name === 'en')?.effect || 'No description available',
+            short_effect: move.effect_entries.find(e => e.language.name === 'en')?.short_effect || 'No description available',
             learned_by_pokemon: move.learned_by_pokemon.map(p => p.name),
-            flavor_text_entries: move.flavor_text_entries.find(e => e.language.name === 'es')?.flavor_text || 'No hay descripción disponible',
+            flavor_text_entries: move.flavor_text_entries.find(e => e.language.name === 'en')?.flavor_text || 'No description available',
           })),
-          height: data.height / 10, // Convertir a metros
-          weight: data.weight / 10, // Convertir a kg
+          height: data.height / 10, // Convert to meters
+          weight: data.weight / 10, // Convert to kg
           base_experience: data.base_experience,
           sprites: {
             front_default: data.sprites.front_default,
@@ -136,17 +165,17 @@ const PokemonDetails = () => {
           species: {
             name: speciesData.name,
             description: speciesData.flavor_text_entries.find(
-              entry => entry.language.name === 'es'
-            )?.flavor_text || 'No hay descripción disponible',
+              entry => entry.language.name === 'en'
+            )?.flavor_text || 'No description available',
             gender_rate: speciesData.gender_rate,
             capture_rate: speciesData.capture_rate,
             base_happiness: speciesData.base_happiness,
             growth_rate: speciesData.growth_rate.name,
-            habitat: speciesData.habitat?.name || 'Desconocido',
+            habitat: speciesData.habitat?.name || 'Unknown',
             generation: speciesData.generation.name,
             egg_groups: speciesData.egg_groups.map(group => group.name),
-            shape: speciesData.shape?.name || 'Desconocido',
-            color: speciesData.color?.name || 'Desconocido',
+            shape: speciesData.shape?.name || 'Unknown',
+            color: speciesData.color?.name || 'Unknown',
             evolution_chain: speciesData.evolution_chain.url,
             varieties: speciesData.varieties.map(variety => ({
               is_default: variety.is_default,
@@ -160,7 +189,7 @@ const PokemonDetails = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching Pokémon details:', error);
-        setError('Error al cargar los detalles del Pokémon');
+        setError('Error loading Pokémon details');
         setLoading(false);
       }
     };
@@ -209,16 +238,16 @@ const PokemonDetails = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-blue-900 to-purple-900 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Botón de regreso */}
+        {/* Back button */}
         <Link href="/Pokedex" className="inline-flex items-center text-white mb-4 sm:mb-6 hover:text-yellow-300 transition-colors">
           <ArrowLeft className="mr-2" />
-          Volver a la Pokédex
+          Back to Pokédex
         </Link>
 
-        {/* Encabezado */}
+        {/* Header */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6">
-            {/* Imágenes */}
+            {/* Images */}
             <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full md:w-auto">
               <div className="bg-gray-800 rounded-lg p-2 sm:p-4">
                 <img 
@@ -242,7 +271,7 @@ const PokemonDetails = () => {
                   alt={`${pokemon.name} artwork`}
                   className="w-24 h-24 sm:w-32 sm:h-32 object-contain"
                 />
-                <p className="text-center text-white mt-2 text-sm sm:text-base">Arte Oficial</p>
+                <p className="text-center text-white mt-2 text-sm sm:text-base">Official Artwork</p>
               </div>
               <div className="bg-gray-800 rounded-lg p-2 sm:p-4">
                 <button
@@ -255,45 +284,45 @@ const PokemonDetails = () => {
                     <Volume2 className="text-white" size={24} />
                   )}
                 </button>
-                <p className="text-center text-white mt-2 text-sm sm:text-base">Chillido</p>
+                <p className="text-center text-white mt-2 text-sm sm:text-base">Cry</p>
               </div>
             </div>
 
-            {/* Información básica */}
+            {/* Basic information */}
             <div className="flex-1 w-full mt-4 md:mt-0">
               <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 capitalize">
                 {pokemon.name}
               </h1>
               <p className="text-xl sm:text-2xl text-gray-300 mb-4">#{pokemon.id.toString().padStart(3, '0')}</p>
               
-              {/* Tipos */}
+              {/* Types */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {pokemon.types.map((type, index) => (
                   <span 
                     key={index}
-                    className="px-3 sm:px-4 py-1 rounded-full text-white bg-gray-800 capitalize text-sm sm:text-base"
+                    className={`${typeColors[type.name]} text-white px-3 sm:px-4 py-1 rounded-full capitalize text-sm sm:text-base`}
                   >
                     {type.name}
                   </span>
                 ))}
               </div>
 
-              {/* Estadísticas básicas */}
+              {/* Basic stats */}
               <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div className="bg-gray-800 rounded-lg p-2 sm:p-3">
-                  <p className="text-gray-400 text-sm sm:text-base">Altura</p>
+                  <p className="text-gray-400 text-sm sm:text-base">Height</p>
                   <p className="text-white text-sm sm:text-base">{pokemon.height} m</p>
                 </div>
                 <div className="bg-gray-800 rounded-lg p-2 sm:p-3">
-                  <p className="text-gray-400 text-sm sm:text-base">Peso</p>
+                  <p className="text-gray-400 text-sm sm:text-base">Weight</p>
                   <p className="text-white text-sm sm:text-base">{pokemon.weight} kg</p>
                 </div>
                 <div className="bg-gray-800 rounded-lg p-2 sm:p-3">
-                  <p className="text-gray-400 text-sm sm:text-base">Experiencia Base</p>
+                  <p className="text-gray-400 text-sm sm:text-base">Base Experience</p>
                   <p className="text-white text-sm sm:text-base">{pokemon.base_experience}</p>
                 </div>
                 <div className="bg-gray-800 rounded-lg p-2 sm:p-3">
-                  <p className="text-gray-400 text-sm sm:text-base">Tasa de Captura</p>
+                  <p className="text-gray-400 text-sm sm:text-base">Capture Rate</p>
                   <p className="text-white text-sm sm:text-base">{pokemon.species.capture_rate}</p>
                 </div>
               </div>
@@ -301,7 +330,7 @@ const PokemonDetails = () => {
           </div>
         </div>
 
-        {/* Pestañas */}
+        {/* Tabs */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6">
           <div className="flex gap-2 sm:gap-4 mb-4 sm:mb-6 overflow-x-auto pb-2">
             <button
@@ -312,7 +341,7 @@ const PokemonDetails = () => {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              Información
+              Information
             </button>
             <button
               onClick={() => setActiveTab('stats')}
@@ -322,7 +351,7 @@ const PokemonDetails = () => {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              Estadísticas
+              Stats
             </button>
             <button
               onClick={() => setActiveTab('moves')}
@@ -332,7 +361,7 @@ const PokemonDetails = () => {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              Movimientos
+              Moves
             </button>
             <button
               onClick={() => setActiveTab('abilities')}
@@ -342,7 +371,7 @@ const PokemonDetails = () => {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              Habilidades
+              Abilities
             </button>
             <button
               onClick={() => setActiveTab('evolution')}
@@ -352,7 +381,7 @@ const PokemonDetails = () => {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              Evoluciones
+              Evolution
             </button>
             <button
               onClick={() => setActiveTab('types')}
@@ -362,33 +391,33 @@ const PokemonDetails = () => {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              Tipos
+              Types
             </button>
           </div>
 
-          {/* Contenido de las pestañas */}
+          {/* Tab content */}
           <div className="text-white">
             {activeTab === 'info' && (
               <div className="space-y-4">
                 <div className="bg-gray-800 rounded-lg p-4">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2">Descripción</h3>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">Description</h3>
                   <p className="text-sm sm:text-base">{pokemon.species.description}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2">Hábitat</h3>
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">Habitat</h3>
                     <p className="capitalize text-sm sm:text-base">{pokemon.species.habitat}</p>
                   </div>
                   <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2">Tasa de Captura</h3>
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">Capture Rate</h3>
                     <p className="text-sm sm:text-base">{pokemon.species.capture_rate}</p>
                   </div>
                   <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2">Generación</h3>
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">Generation</h3>
                     <p className="capitalize text-sm sm:text-base">{pokemon.species.generation}</p>
                   </div>
                   <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2">Grupos de Huevo</h3>
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">Egg Groups</h3>
                     <div className="flex flex-wrap gap-2">
                       {pokemon.species.egg_groups.map((group, index) => (
                         <span key={index} className="capitalize bg-gray-700 px-2 py-1 rounded text-sm sm:text-base">
@@ -398,7 +427,7 @@ const PokemonDetails = () => {
                     </div>
                   </div>
                   <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2">Forma</h3>
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">Shape</h3>
                     <p className="capitalize text-sm sm:text-base">{pokemon.species.shape}</p>
                   </div>
                   <div className="bg-gray-800 rounded-lg p-4">
@@ -424,7 +453,7 @@ const PokemonDetails = () => {
                       ></div>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                      Puntos de esfuerzo: {stat.effort}
+                      Effort points: {stat.effort}
                     </p>
                   </div>
                 ))}
@@ -438,19 +467,21 @@ const PokemonDetails = () => {
                     <h3 className="text-lg sm:text-xl font-bold capitalize mb-2">{move.name}</h3>
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <div className="bg-gray-700 rounded p-2">
-                        <p className="text-xs sm:text-sm text-gray-400">Tipo</p>
-                        <p className="capitalize text-sm sm:text-base">{move.type}</p>
+                        <p className="text-xs sm:text-sm text-gray-400">Type</p>
+                        <span className={`${typeColors[move.type]} text-white px-2 py-1 rounded capitalize text-sm sm:text-base`}>
+                          {move.type}
+                        </span>
                       </div>
                       <div className="bg-gray-700 rounded p-2">
-                        <p className="text-xs sm:text-sm text-gray-400">Categoría</p>
+                        <p className="text-xs sm:text-sm text-gray-400">Category</p>
                         <p className="capitalize text-sm sm:text-base">{move.damage_class}</p>
                       </div>
                       <div className="bg-gray-700 rounded p-2">
-                        <p className="text-xs sm:text-sm text-gray-400">Poder</p>
+                        <p className="text-xs sm:text-sm text-gray-400">Power</p>
                         <p className="text-sm sm:text-base">{move.power || '-'}</p>
                       </div>
                       <div className="bg-gray-700 rounded p-2">
-                        <p className="text-xs sm:text-sm text-gray-400">Precisión</p>
+                        <p className="text-xs sm:text-sm text-gray-400">Accuracy</p>
                         <p className="text-sm sm:text-base">{move.accuracy || '-'}</p>
                       </div>
                       <div className="bg-gray-700 rounded p-2">
@@ -458,7 +489,7 @@ const PokemonDetails = () => {
                         <p className="text-sm sm:text-base">{move.pp}</p>
                       </div>
                       <div className="bg-gray-700 rounded p-2">
-                        <p className="text-xs sm:text-sm text-gray-400">Prioridad</p>
+                        <p className="text-xs sm:text-sm text-gray-400">Priority</p>
                         <p className="text-sm sm:text-base">{move.priority}</p>
                       </div>
                     </div>
@@ -475,7 +506,7 @@ const PokemonDetails = () => {
                     <h3 className="text-lg sm:text-xl font-bold capitalize mb-2">{ability.name}</h3>
                     {ability.is_hidden && (
                       <span className="inline-block bg-yellow-500 text-white text-xs px-2 py-1 rounded mb-2">
-                        Habilidad Oculta
+                        Hidden Ability
                       </span>
                     )}
                     <p className="text-sm sm:text-base text-gray-300 mb-2">{ability.effect}</p>
@@ -490,58 +521,62 @@ const PokemonDetails = () => {
                 {pokemon.evolutions.map((evo, index) => (
                   <div key={index} className="bg-gray-800 rounded-lg p-4">
                     <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <img 
-                        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.id}.png`}
-                        alt={evo.name}
-                        className="w-16 h-16 sm:w-24 sm:h-24"
-                      />
+                      <Link href={`/Pokedex/details/${evo.id}`} className="group">
+                        <img 
+                          src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.id}.png`}
+                          alt={evo.name}
+                          className="w-16 h-16 sm:w-24 sm:h-24 object-contain transform transition-all duration-300 group-hover:scale-110"
+                        />
+                      </Link>
                       <div className="w-full sm:w-auto">
-                        <h3 className="text-lg sm:text-xl font-bold capitalize">{evo.name}</h3>
+                        <Link href={`/Pokedex/details/${evo.id}`} className="group">
+                          <h3 className="text-lg sm:text-xl font-bold capitalize group-hover:text-yellow-300 transition-colors">{evo.name}</h3>
+                        </Link>
                         <div className="space-y-1">
                           {evo.trigger === 'level-up' && evo.level && (
-                            <p className="text-sm sm:text-base text-gray-400">Nivel {evo.level}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Level {evo.level}</p>
                           )}
                           {evo.item && (
-                            <p className="text-sm sm:text-base text-gray-400">Usando {evo.item}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Using {evo.item}</p>
                           )}
                           {evo.min_happiness && (
-                            <p className="text-sm sm:text-base text-gray-400">Felicidad mínima: {evo.min_happiness}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Minimum happiness: {evo.min_happiness}</p>
                           )}
                           {evo.min_affection && (
-                            <p className="text-sm sm:text-base text-gray-400">Afecto mínimo: {evo.min_affection}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Minimum affection: {evo.min_affection}</p>
                           )}
                           {evo.time_of_day && (
-                            <p className="text-sm sm:text-base text-gray-400">Hora del día: {evo.time_of_day}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Time of day: {evo.time_of_day}</p>
                           )}
                           {evo.gender && (
-                            <p className="text-sm sm:text-base text-gray-400">Género: {evo.gender === 1 ? 'Femenino' : 'Masculino'}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Gender: {evo.gender === 1 ? 'Female' : 'Male'}</p>
                           )}
                           {evo.held_item && (
-                            <p className="text-sm sm:text-base text-gray-400">Objeto sostenido: {evo.held_item}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Held item: {evo.held_item}</p>
                           )}
                           {evo.known_move && (
-                            <p className="text-sm sm:text-base text-gray-400">Movimiento conocido: {evo.known_move}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Known move: {evo.known_move}</p>
                           )}
                           {evo.known_move_type && (
-                            <p className="text-sm sm:text-base text-gray-400">Tipo de movimiento conocido: {evo.known_move_type}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Known move type: {evo.known_move_type}</p>
                           )}
                           {evo.location && (
-                            <p className="text-sm sm:text-base text-gray-400">Ubicación: {evo.location}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Location: {evo.location}</p>
                           )}
                           {evo.needs_overworld_rain && (
-                            <p className="text-sm sm:text-base text-gray-400">Requiere lluvia en el mundo</p>
+                            <p className="text-sm sm:text-base text-gray-400">Requires overworld rain</p>
                           )}
                           {evo.party_species && (
-                            <p className="text-sm sm:text-base text-gray-400">Especie en el equipo: {evo.party_species}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Party species: {evo.party_species}</p>
                           )}
                           {evo.party_type && (
-                            <p className="text-sm sm:text-base text-gray-400">Tipo en el equipo: {evo.party_type}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Party type: {evo.party_type}</p>
                           )}
                           {evo.relative_physical_stats && (
-                            <p className="text-sm sm:text-base text-gray-400">Estadísticas relativas: {evo.relative_physical_stats}</p>
+                            <p className="text-sm sm:text-base text-gray-400">Relative physical stats: {evo.relative_physical_stats}</p>
                           )}
                           {evo.turn_upside_down && (
-                            <p className="text-sm sm:text-base text-gray-400">Requiere girar la consola</p>
+                            <p className="text-sm sm:text-base text-gray-400">Requires turning the console upside down</p>
                           )}
                         </div>
                       </div>
@@ -555,66 +590,68 @@ const PokemonDetails = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {pokemon.types.map((type, index) => (
                   <div key={index} className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-lg sm:text-xl font-bold capitalize mb-4">{type.name}</h3>
+                    <h3 className={`${typeColors[type.name]} text-white text-lg sm:text-xl font-bold capitalize mb-4 px-4 py-2 rounded-lg`}>
+                      {type.name}
+                    </h3>
                     <div className="space-y-4">
                       <div>
-                        <h4 className="text-base sm:text-lg font-semibold mb-2">Doble daño a:</h4>
+                        <h4 className="text-base sm:text-lg font-semibold mb-2 text-white">Double damage to:</h4>
                         <div className="flex flex-wrap gap-2">
                           {type.damage_relations.double_damage_to?.map((t, i) => (
-                            <span key={i} className="bg-gray-700 px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base">
+                            <span key={i} className={`${typeColors[t.name]} text-white px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base`}>
                               {t.name}
                             </span>
-                          )) || <span className="text-gray-400 text-sm sm:text-base">Ninguno</span>}
+                          )) || <span className="text-gray-400 text-sm sm:text-base">None</span>}
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-base sm:text-lg font-semibold mb-2">Mitad de daño a:</h4>
+                        <h4 className="text-base sm:text-lg font-semibold mb-2 text-white">Half damage to:</h4>
                         <div className="flex flex-wrap gap-2">
                           {type.damage_relations.half_damage_to?.map((t, i) => (
-                            <span key={i} className="bg-gray-700 px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base">
+                            <span key={i} className={`${typeColors[t.name]} text-white px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base`}>
                               {t.name}
                             </span>
-                          )) || <span className="text-gray-400 text-sm sm:text-base">Ninguno</span>}
+                          )) || <span className="text-gray-400 text-sm sm:text-base">None</span>}
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-base sm:text-lg font-semibold mb-2">Sin daño a:</h4>
+                        <h4 className="text-base sm:text-lg font-semibold mb-2 text-white">No damage to:</h4>
                         <div className="flex flex-wrap gap-2">
                           {type.damage_relations.no_damage_to?.map((t, i) => (
-                            <span key={i} className="bg-gray-700 px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base">
+                            <span key={i} className={`${typeColors[t.name]} text-white px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base`}>
                               {t.name}
                             </span>
-                          )) || <span className="text-gray-400 text-sm sm:text-base">Ninguno</span>}
+                          )) || <span className="text-gray-400 text-sm sm:text-base">None</span>}
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-base sm:text-lg font-semibold mb-2">Doble daño de:</h4>
+                        <h4 className="text-base sm:text-lg font-semibold mb-2 text-white">Double damage from:</h4>
                         <div className="flex flex-wrap gap-2">
                           {type.damage_relations.double_damage_from?.map((t, i) => (
-                            <span key={i} className="bg-gray-700 px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base">
+                            <span key={i} className={`${typeColors[t.name]} text-white px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base`}>
                               {t.name}
                             </span>
-                          )) || <span className="text-gray-400 text-sm sm:text-base">Ninguno</span>}
+                          )) || <span className="text-gray-400 text-sm sm:text-base">None</span>}
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-base sm:text-lg font-semibold mb-2">Mitad de daño de:</h4>
+                        <h4 className="text-base sm:text-lg font-semibold mb-2 text-white">Half damage from:</h4>
                         <div className="flex flex-wrap gap-2">
                           {type.damage_relations.half_damage_from?.map((t, i) => (
-                            <span key={i} className="bg-gray-700 px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base">
+                            <span key={i} className={`${typeColors[t.name]} text-white px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base`}>
                               {t.name}
                             </span>
-                          )) || <span className="text-gray-400 text-sm sm:text-base">Ninguno</span>}
+                          )) || <span className="text-gray-400 text-sm sm:text-base">None</span>}
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-base sm:text-lg font-semibold mb-2">Sin daño de:</h4>
+                        <h4 className="text-base sm:text-lg font-semibold mb-2 text-white">No damage from:</h4>
                         <div className="flex flex-wrap gap-2">
                           {type.damage_relations.no_damage_from?.map((t, i) => (
-                            <span key={i} className="bg-gray-700 px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base">
+                            <span key={i} className={`${typeColors[t.name]} text-white px-2 sm:px-3 py-1 rounded capitalize text-sm sm:text-base`}>
                               {t.name}
                             </span>
-                          )) || <span className="text-gray-400 text-sm sm:text-base">Ninguno</span>}
+                          )) || <span className="text-gray-400 text-sm sm:text-base">None</span>}
                         </div>
                       </div>
                     </div>
