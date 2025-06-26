@@ -1,9 +1,15 @@
 🔴 Pokédex Web App
+
+
 ¡Bienvenido entrenador Pokémon! Esta Pokédex web te permite explorar a fondo el mundo Pokémon utilizando datos oficiales de la PokeAPI. Descubre tipos, habilidades, estadísticas y mucho más, todo en tiempo real.
+
+
 
 🧠 Proyecto personal desarrollado con Next.js, React y Tailwind CSS, ideal para aprender consumo de APIs, rutas dinámicas y componentes reutilizables.
 
+
 ⚙️ Tecnologías utilizadas
+
 ⚛️ React.js — Librería principal de UI
 
 🧭 Next.js — Framework para renderizado dinámico y rutas
@@ -12,7 +18,10 @@
 
 🔗 PokeAPI — API pública de datos Pokémon
 
+
+
 🔍 Funcionalidades principales
+
 🔎 Buscar Pokémon por nombre o ID
 
 📸 Ver imagen oficial del Pokémon
@@ -23,9 +32,13 @@
 
 🌐 Consumo de datos en tiempo real desde la API
 
+
+
 🌐 Demo en vivo
+
 Accede a la Pokédex desde aquí:
 🔗 https://pokemon-red-ten.vercel.app
+
 
 💻 Instalación local
 Sigue estos pasos para ejecutar la Pokédex en tu equipo:
