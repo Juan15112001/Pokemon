@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🧩 Pokédex App
 
-## Getting Started
+Una Pokédex web que permite explorar información de Pokémon utilizando la [PokeAPI](https://pokeapi.co/).
 
-First, run the development server:
+## 🚀 Tecnologías utilizadas
+
+- **Next.js** — Framework para React
+- **React.js** — Librería principal para la interfaz
+- **Tailwind CSS** — (Opcional, si estás usando estilos con Tailwind)
+- **PokeAPI** — API pública para obtener datos de Pokémon
+
+## 🔍 Funcionalidades
+
+- Buscar Pokémon por nombre o ID
+- Ver imagen, tipos, habilidades y estadísticas
+- Navegación rápida entre Pokémon
+- Consumo de datos en tiempo real desde la API
+
+## 🌐 Demo
+
+
+https://pokemon-red-ten.vercel.app/
+
+
+## 📦 Instalación local
+
+Sigue estos pasos para correr el proyecto en tu máquina local:
 
 ```bash
+# 1. Clona el repositorio
+git clone https://github.com/Juan15112001/Pokemon.git
+
+# 2. Entra al directorio del proyecto
+cd pokedex-app
+
+# 3. Instala las dependencias
+npm install
+
+# 4. Inicia el servidor de desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+🧠 Notas
+Todos los datos se obtienen en tiempo real desde la PokeAPI
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Construido con componentes reutilizables en React y rutas dinámicas con Next.js
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+📄 Licencia
+Este es un proyecto personal hecho con fines educativos. No está afiliado a Nintendo ni a The Pokémon Company.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+¡Gracias por visitar la Pokédex! 🎮
